@@ -70,7 +70,7 @@ def main(args):
     model = TADW(M, text_feature, k=k, lambd=lambd, lr=lr)
     # 这个是第一个github的实现，跑通了，但是loss值输出不太对，还没找到原因
     # model.optimize()
-    # 这个是第二个github的实现，还没跑通，grad的问题，具体在tadw_conv文件里面标注了
+    # 这个是第二个github的实现，跑通了，loss还是不对，现在怀疑是不是M和T求解有问题，loss不降反升
     loss, W, H = model.solve(max_iter=200)
 
 

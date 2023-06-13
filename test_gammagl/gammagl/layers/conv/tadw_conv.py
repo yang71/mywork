@@ -74,6 +74,7 @@ class TADW(object):
             self.update_H()
             self.calculate_loss(i)
 
+
     def solve(self, max_iter):
         W = np.mat(np.random.random((self.M.shape[0], self.k)))  # |V|*k
         H = np.mat(np.random.random((self.T.shape[0], self.k)))  # ft*k
@@ -81,20 +82,15 @@ class TADW(object):
         _iter = 0
         loss_list = []
         while _iter < max_iter:
-            print(_iter)
-
-            W = W - self.lr * (2 * (W * H.transpose() * self.T - self.M) * self.T.transpose() * H + self.lambd * W)
-
-            # 这里报错！！！ 因为维度不对，这一步应该是在求解grad，但是不是很明白交替最小化的grad具体怎么求解
-            temp = self.T * self.T.transpose() * H * W.transpose() * W - self.T * self.M.transpose() * W
+            # alternately minimize W and H
+            W = W - self.lr * (2 * (W @ H.transpose() @ self.T - self.M) @ self.T.transpose() @ H + self.lambd * W)
+            temp = self.T @ self.T.transpose() @ H @ W.transpose() @ W - self.T @ self.M.transpose() @ W
             H = H - self.lr * (2 * temp + self.lambd * H)
-
-            loss = np.linalg.norm(self.M - W * H.transpose() * self.T, ord=2)
-            print(loss)
+            loss = np.linalg.norm(self.M - W @ H.transpose() @ self.T, ord=2)
+            print(_iter, loss)
             loss_list.append(loss)
             if loss <= 1e-3:
                 break
             _iter += 1
-
         W = np.hstack((W, self.T.transpose() * H * 10))
         return loss_list, W, H
