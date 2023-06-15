@@ -84,9 +84,12 @@ class WebKB(InMemoryDataset):
             train_masks += [tmp['train_mask'].astype(np.bool_)]
             val_masks += [tmp['val_mask'].astype(np.bool_)]
             test_masks += [tmp['test_mask'].astype(np.bool_)]
-        train_mask = np.concatenate(train_masks)
-        val_mask = np.concatenate(val_masks)
-        test_mask = np.concatenate(test_masks)
+        # train_mask = np.concatenate(train_masks)
+        # val_mask = np.concatenate(val_masks)
+        # test_mask = np.concatenate(test_masks)
+        train_mask = np.stack(train_masks)
+        val_mask = np.stack(val_masks)
+        test_mask = np.stack(test_masks)
         data = Graph(x=x, edge_index=edge_index, y=y, train_mask=train_mask,
                     val_mask=val_mask, test_mask=test_mask)
         data = data if self.pre_transform is None else self.pre_transform(data)

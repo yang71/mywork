@@ -13,16 +13,24 @@ from gammagl.models import TADWModel
 from gammagl.utils import calc_gcn_norm, mask_to_index
 from tensorlayerx.model import TrainOneStep, WithLoss
 from sklearn.linear_model import LogisticRegression
+from sklearn import svm
+from sklearn import metrics
+from sklearn import model_selection
 
 
-def calculate_acc(train_z, train_y, test_z, test_y, solver='lbfgs', multi_class='auto', max_iter=150):
-    train_z = tlx.convert_to_numpy(train_z)
-    train_y = tlx.convert_to_numpy(train_y)
-    test_z = tlx.convert_to_numpy(test_z)
-    test_y = tlx.convert_to_numpy(test_y)
+def calculate_acc(train_z, train_y, test_z, test_y, solver='lbfgs', multi_class='auto'):
+    # train_z = tlx.convert_to_numpy(train_z)
+    # train_y = tlx.convert_to_numpy(train_y)
+    # test_z = tlx.convert_to_numpy(test_z)
+    # test_y = tlx.convert_to_numpy(test_y)
 
-    clf = LogisticRegression(solver=solver, multi_class=multi_class, max_iter=max_iter).fit(train_z, train_y)
-    return clf.score(test_z, test_y)
+    # clf = LogisticRegression(solver=solver, multi_class=multi_class).fit(train_z, train_y)
+    # return clf.score(test_z, test_y)
+
+    clf = svm.LinearSVC(C=5.0)
+    clf.fit(train_z, train_y)
+    predict_y = clf.predict(test_z)
+    return metrics.accuracy_score(test_y, predict_y)
 
 
 def main(args):
@@ -58,22 +66,25 @@ def main(args):
 
     for epoch in range(args.n_epoch):
         model.set_train()
-        train_loss = model.fit()
+        train_loss = model.fit(epoch)
         model.set_eval()
         z = model.campute()
 
-        val_acc = calculate_acc(tlx.gather(z, data['train_idx']), tlx.gather(graph.y, data['train_idx']),
-                                tlx.gather(z, data['val_idx']), tlx.gather(graph.y, data['val_idx']),
-                                max_iter=500)
+        # val_acc = calculate_acc(tlx.gather(z, data['train_idx']), tlx.gather(graph.y, data['train_idx']),
+        #                         tlx.gather(z, data['val_idx']), tlx.gather(graph.y, data['val_idx']))
+        train_x, test_x, train_y, test_y = model_selection.train_test_split(z, tlx.convert_to_numpy(graph.y),
+                                                                          test_size=0.2, shuffle=True)
+        test_acc = calculate_acc(train_x, train_y, test_x, test_y)
 
         print("Epoch [{:0>3d}] ".format(epoch + 1) \
               + "  train loss: {:.10f}".format(train_loss.item()) \
-              + "  val acc: {:.10f}".format(val_acc))
+              + "  val acc: {:.10f}".format(test_acc))
 
+    model.set_eval()
     z = model.campute()
-    test_acc = calculate_acc(tlx.gather(z, data['train_idx']), tlx.gather(graph.y, data['train_idx']),
-                             tlx.gather(z, data['test_idx']), tlx.gather(graph.y, data['test_idx']),
-                             max_iter=300)
+    train_x, test_x, train_y, test_y = model_selection.train_test_split(z, tlx.convert_to_numpy(graph.y),
+                                                                        test_size=0.2, shuffle=True)
+    test_acc = calculate_acc(train_x, train_y, test_x, test_y)
     print("Test acc:  {:.4f}".format(test_acc))
     return test_acc
 
@@ -84,11 +95,11 @@ if __name__ == '__main__':
     parser.add_argument('--dataset', type=str, default='cora', help='dataset')
     parser.add_argument("--dataset_path", type=str, default=r'../', help="path to save dataset")
     parser.add_argument("--best_model_path", type=str, default=r'./', help="path to save best model")
-    parser.add_argument("--lr", type=float, default=0.05, help="learning rate")
-    parser.add_argument("--n_epoch", type=int, default=100, help="number of epoch")
-    parser.add_argument("--embedding_dim", type=int, default=80)
-    parser.add_argument("--lamda", type=float, default=0.5)
-    parser.add_argument("--svdft", type=int, default=200)
+    parser.add_argument("--lr", type=float, default=0.3, help="learning rate")  # 0.3
+    parser.add_argument("--n_epoch", type=int, default=100, help="number of epoch")  # 100
+    parser.add_argument("--embedding_dim", type=int, default=500)  # 80 100 200 300 400
+    parser.add_argument("--lamda", type=float, default=0.5)  # 0.5
+    parser.add_argument("--svdft", type=int, default=300)  # 300
 
     args = parser.parse_args()
 

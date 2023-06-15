@@ -80,7 +80,7 @@ class WikipediaNetwork(InMemoryDataset):
 
     @property
     def processed_file_names(self) -> str:
-        return tlx.BACKEND+'_data.pt'
+        return tlx.BACKEND + '_data.pt'
 
     def download(self):
         if self.geom_gcn_preprocess:
@@ -95,18 +95,30 @@ class WikipediaNetwork(InMemoryDataset):
 
     def process(self):
         if self.geom_gcn_preprocess:
+            # with open(self.raw_paths[0], 'r') as f:
+            #     data = f.read().split('\n')[1:-1]
+            # x = [[float(v) for v in r.split('\t')[1].split(',')] for r in data]
+            # x = np.array(x, dtype=np.float32)
+            # y = [int(r.split('\t')[2]) for r in data]
+            # y = np.array(y, dtype=np.int64)
+            #
+            # with open(self.raw_paths[1], 'r') as f:
+            #     data = f.read().split('\n')[1:-1]
+            #     data = [[int(v) for v in r.split('\t')] for r in data]
+            # edge_index = np.ascontiguousarray(np.array(data, dtype=np.int64).T)
+            # edge_index, _ = coalesce(edge_index, None, x.size, x.size)
             with open(self.raw_paths[0], 'r') as f:
                 data = f.read().split('\n')[1:-1]
-            x = [[float(v) for v in r.split('\t')[1].split(',')] for r in data]
-            x = np.array(x, dtype=np.float32)
-            y = [int(r.split('\t')[2]) for r in data]
-            y = np.array(y, dtype=np.int64)
+                x = [[float(v) for v in r.split('\t')[1].split(',')] for r in data]
+                x = np.array(x, dtype=np.float32)
+                y = [int(r.split('\t')[2]) for r in data]
+                y = np.array(y, dtype=np.int64)
 
             with open(self.raw_paths[1], 'r') as f:
                 data = f.read().split('\n')[1:-1]
                 data = [[int(v) for v in r.split('\t')] for r in data]
-            edge_index = np.ascontiguousarray(np.array(data, dtype=np.int64).T)
-            edge_index, _ = coalesce(edge_index, None, x.size, x.size)
+                edge_index = np.ascontiguousarray(np.array(data, dtype=np.int64).T)
+                edge_index = coalesce(edge_index)
 
             train_masks, val_masks, test_masks = [], [], []
             for f in self.raw_paths[2:]:
@@ -114,11 +126,11 @@ class WikipediaNetwork(InMemoryDataset):
                 train_masks += [tmp['train_mask'].astype(np.bool_)]
                 val_masks += [tmp['val_mask'].astype(np.bool_)]
                 test_masks += [tmp['test_mask'].astype(np.bool_)]
-            train_mask = np.concatenate(train_masks)
-            val_mask = np.concatenate(val_masks)
-            test_mask = np.concatenate(test_masks)
+            train_mask = np.stack(train_masks)
+            val_mask = np.stack(val_masks)
+            test_mask = np.stack(test_masks)
             data = Graph(x=x, edge_index=edge_index, y=y, train_mask=train_mask,
-                        val_mask=val_mask, test_mask=test_mask)
+                         val_mask=val_mask, test_mask=test_mask)
 
         else:
             data = np.load(self.raw_paths[0], 'r', allow_pickle=True)
@@ -133,6 +145,5 @@ class WikipediaNetwork(InMemoryDataset):
 
         if self.pre_transform is not None:
             data = self.pre_transform(data)
- 
-        self.save_data(self.collate([data]), self.processed_paths[0])
 
+        self.save_data(self.collate([data]), self.processed_paths[0])

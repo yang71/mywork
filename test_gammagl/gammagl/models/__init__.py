@@ -36,6 +36,8 @@ from .node2vec import Node2vecModel
 from .hpn import HPN
 from .gmm import GMMModel
 from .iehgcn import ieHGCNModel
+from .mgnni import MGNNI
+from .mgnni import MGNNI_m_att
 from .tadw import TADWModel
 
 
@@ -76,7 +78,9 @@ __all__ = [
     'HPN',
     'GMMModel',
     'ieHGCNModel',
-    'TADWModel'
+    'MGNNI',
+    'MGNNI_m_att',
+    ''
 ]
 
 classes = __all__

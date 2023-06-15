@@ -1,81 +1,31 @@
 import numpy as np
-from tqdm import tqdm
+import tensorlayerx as tlx
+from gammagl.layers.conv import MessagePassing
 
-class TADW(object):
+class TADW(MessagePassing):
     """
     Text Attributed DeepWalk Abstract Class
     """
-    def __init__(self, M, T, k, lambd, lr):
+    def __init__(self, M, T, k, lambd, lr, num_class, name):
         """
         Setting up the target matrices and arguments. Weights are initialized.
         :param A: Proximity matrix.
         :param T: Text data
         :param args: Model arguments.
         """
+        super().__init__()
+
         self.M = M  # |V|*|V|
-        self.T = np.transpose(T)  # |V|*ft -> ft*|V|
+        self.T = T  # ft*|V|
         self.k = k
         self.lambd = lambd
         self.lr = lr
-        self.init_weights()
+        self.name = name
 
-    def init_weights(self):
-        """
-        Initialization of weights and loss container.
-        """
-        self.W = np.random.uniform(0, 1, (self.k, self.M.shape[0]))  # k*|V|
-        self.H = np.random.uniform(0, 1, (self.k, self.T.shape[0]))  # k*ft
+        self.linearsvm = tlx.layers.Linear(in_features=2*k, out_features=num_class,
+                                            W_init='xavier_uniform', b_init=None)
 
-    def update_W(self):
-        """
-        A single update of the node embedding matrix.
-        """
-        H_T = np.dot(self.H, self.T)  # k*|V|
-        grad = self.lambd * self.W - np.dot(H_T, self.M - np.dot(np.transpose(H_T), self.W))
-        self.W = self.W - self.lr * grad
-        # Overflow control
-        # self.W[self.W < self.lower_control] = self.lower_control
-
-    def update_H(self):
-        """
-        A single update of the feature basis matrix.
-        """
-        inside = self.M - np.dot(np.dot(np.transpose(self.W), self.H), self.T)  # |V|*|V|
-        grad = self.lambd * self.H - np.dot(np.dot(self.W, inside), np.transpose(self.T))  # K*ft
-        self.H = self.H - self.lr * grad
-        # Overflow control
-        # self.H[self.H < self.lower_control] = self.lower_control
-
-    def calculate_loss(self, iteration):
-        """
-        Calculating the losses in a given iteration.
-        :param iteration: Iteration round number.
-        """
-        main_loss = np.sum(np.square(self.M - np.dot(np.dot(np.transpose(self.W), self.H), self.T)))
-        regul_1 = self.lambd * np.sum(np.square(self.W))
-        regul_2 = self.lambd * np.sum(np.square(self.H))
-        print(iteration, main_loss, regul_1, regul_2)
-
-    def compile_embedding(self, ids):
-        """
-        Return the embedding.
-        """
-        to_concat = [ids, np.transpose(self.W), np.transpose(np.dot(self.H, self.T))]
-        return np.concatenate(to_concat, axis=1)
-
-
-    def optimize(self):
-        """
-        Gradient descent updates for a given number of iterations.
-        """
-        self.calculate_loss(0)
-        for i in tqdm(range(1, 201)):
-            self.update_W()
-            self.update_H()
-            self.calculate_loss(i)
-
-
-    def solve(self, max_iter):
+    def calcu_embed(self, max_iter):
         W = np.mat(np.random.random((self.M.shape[0], self.k)))  # |V|*k
         H = np.mat(np.random.random((self.T.shape[0], self.k)))  # ft*k
 
@@ -87,10 +37,15 @@ class TADW(object):
             temp = self.T @ self.T.transpose() @ H @ W.transpose() @ W - self.T @ self.M.transpose() @ W
             H = H - self.lr * (2 * temp + self.lambd * H)
             loss = np.linalg.norm(self.M - W @ H.transpose() @ self.T, ord=2)
-            print(_iter, loss)
+            print("iter: ", _iter, ", loss: ", loss)
             loss_list.append(loss)
             if loss <= 1e-3:
                 break
             _iter += 1
-        W = np.hstack((W, self.T.transpose() * H * 10))
-        return loss_list, W, H
+        embedding = np.hstack((W, self.T.transpose() @ H * 10))  # |V|*2k
+        # embedding = np.concatenate((W.transpose(), H.transpose() @ self.T * 10), axis=0)  # 2k*|V|
+        return embedding  # |V|*2k
+
+    # LinearSVM
+    def forward(self, x):
+        return self.linearsvm(x)

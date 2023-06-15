@@ -73,14 +73,18 @@ class TADWModel(tlx.nn.Module):
         self.W = np.random.uniform(0, 1, (self.embedding_dim, self.M.shape[0]))  # k*|V|
         self.H = np.random.uniform(0, 1, (self.embedding_dim, self.T.shape[0]))  # k*ft
 
+        self.losses = []
+
     def _create_target_matrix(self):
         edge_index, _ = add_self_loops(self.edge_index, num_nodes=self.N, n_loops=1)
         num_nodes = self.N
         src = edge_index[0]
         degs = degree(src, num_nodes=num_nodes, dtype=tlx.float32)
         norm_degs = tlx.convert_to_numpy(1.0 / degs)
+
         # 初始化A
         A = [[0] * num_nodes for _ in range(num_nodes)]
+
         length = edge_index.shape[1]
         for i in range(length):
             src = edge_index[0][i]
@@ -106,9 +110,9 @@ class TADWModel(tlx.nn.Module):
         U, S, V = svds(feature, k=self.svdft)
         text_feature = U.dot(np.diag(S))
 
-        # length = len(text_feature)
-        # for i in range(length):
-        #     text_feature[i] = text_feature[i] / np.linalg.norm(text_feature[i], ord=2)
+        length = len(text_feature)
+        for i in range(length):
+            text_feature[i] = text_feature[i] / np.linalg.norm(text_feature[i], ord=2)
         # text_feature = text_feature * 0.1
 
         return text_feature
@@ -116,53 +120,50 @@ class TADWModel(tlx.nn.Module):
     def forward(self, edge_index):
         return self.loss()
 
-    def fit(self):
+    def fit(self, iter):
         """
         Gradient descent updates for a given number of iterations.
         """
         self.update_W()
-        # self.update_H()
-        return self.loss()
+        self.update_H()
+        return self.loss(iter)
 
     def update_W(self):
         """
         A single update of the node embedding matrix.
         """
+
         H_T = np.dot(self.H, self.T)  # k*|V|
         grad = self.lamda * self.W - np.dot(H_T, self.M - np.dot(np.transpose(H_T), self.W))
+        # grad = self.lamda * self.W - 2 / np.prod(self.M.shape) * np.dot(H_T, self.M - np.dot(H_T.T, self.W))
         self.W = self.W - self.lr * grad
         # Overflow control
         self.W[self.W < 10 ** (-15)] = 10 ** (-15)
-
-        # inside = self.M - np.dot(np.dot(np.transpose(self.W), self.H), self.T)  # |V|*|V|
-        # grad = self.lamda * self.W - 2 * np.dot(H_T, inside)  # K*ft
-        # self.W = self.W - self.lr * grad
-        # # Overflow control
-        # self.W[self.W < 10 ** (-15)] = 10 ** (-15)
 
     def update_H(self):
         """
         A single update of the feature basis matrix.
         """
+
         inside = self.M - np.dot(np.dot(np.transpose(self.W), self.H), self.T)  # |V|*|V|
         grad = self.lamda * self.H - np.dot(np.dot(self.W, inside), np.transpose(self.T))  # K*ft
+        # grad = self.lamda * self.H - 2 / np.prod(self.M.shape) * np.dot(np.dot(self.W, inside), self.T.T)
         self.H = self.H - self.lr * grad
         # Overflow control
         self.H[self.H < 10 ** (-15)] = 10 ** (-15)
 
-        # inside = self.M - np.dot(np.dot(np.transpose(self.W), self.H), self.T)  # |V|*|V|
-        # grad = self.lamda * self.H - 2 * np.dot(self.W, inside)  # K*ft
-        # self.H = self.H - self.lr * grad
-        # # Overflow control
-        # self.H[self.H < 10 ** (-15)] = 10 ** (-15)
+    def loss(self, iteration):
 
-    def loss(self):
         self.score_matrix = self.M - np.dot(np.dot(np.transpose(self.W), self.H), self.T)
-        main_loss = np.sum(np.square(self.score_matrix))
-
+        main_loss = np.sum(np.square(self.score_matrix))  # when use summation
         # regul_1 = self.lamda * np.sum(np.square(self.W))
         # regul_2 = self.lamda * np.sum(np.square(self.H))
 
+        # main_loss = np.mean(np.square(self.score_matrix))
+        # regul_1 = self.lamda * np.sum(np.square(self.W)) / 2
+        # regul_2 = self.lamda * np.sum(np.square(self.H)) / 2
+        # loss_sum = main_loss + regul_1 + regul_2
+        # self.losses.append([iteration, loss_sum, main_loss, regul_1, regul_2])
         # print(iteration, main_loss, regul_1, regul_2)
         return main_loss
 
