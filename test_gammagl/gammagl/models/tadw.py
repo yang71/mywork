@@ -6,44 +6,10 @@ from gammagl.utils import add_self_loops
 from gammagl.utils import degree
 from scipy.sparse.linalg import svds
 
-EPS = 1e-15
+lower_control = 10 ** (-15)
 
 
 class TADWModel(tlx.nn.Module):
-    r"""The Node2Vec model from the
-    `"node2vec: Scalable Feature Learning for Networks"
-    <https://arxiv.org/abs/1607.00653>`_ paper where random walks of
-    length :obj:`walk_length` are sampled in a given graph, and node embeddings
-    are learned via negative sampling optimization.
-
-    Parameters
-    ----------
-        edge_index: Iterable
-            The edge indices.
-        edge_weight: Iterable
-            The edge weight.
-        embedding_dim: int
-            The size of each embedding vector.
-        walk_length: int
-            The walk length.
-        p: float
-            Likelihood of immediately revisiting a node in the walk.
-        q: float
-            Control parameter to interpolate between breadth-first strategy and depth-first strategy.
-        num_walks: int
-            The number of walks to sample for each node.
-        window_size: int
-            The actual context size which is considered for
-            positive samples. This parameter increases the effective sampling
-            rate by reusing samples across different source nodes.
-        num_negatives: int
-            The number of negative samples to use for each positive sample.
-        num_nodes: int
-            The number of nodes.
-        name: str
-            model name
-    """
-
     def __init__(
             self,
             edge_index,
@@ -82,7 +48,6 @@ class TADWModel(tlx.nn.Module):
         degs = degree(src, num_nodes=num_nodes, dtype=tlx.float32)
         norm_degs = tlx.convert_to_numpy(1.0 / degs)
 
-        # 初始化A
         A = [[0] * num_nodes for _ in range(num_nodes)]
 
         length = edge_index.shape[1]
@@ -106,7 +71,6 @@ class TADWModel(tlx.nn.Module):
                 IDF = tlx.convert_to_numpy(tlx.log(tlx.convert_to_tensor(num_nodes / temp)))
                 feature[:, i] = feature[:, i] * IDF
 
-        # SVD
         U, S, V = svds(feature, k=self.svdft)
         text_feature = U.dot(np.diag(S))
 
@@ -117,16 +81,16 @@ class TADWModel(tlx.nn.Module):
 
         return text_feature
 
-    def forward(self, edge_index):
-        return self.loss()
 
-    def fit(self, iter):
+    def fit(self):
         """
         Gradient descent updates for a given number of iterations.
         """
+        loss = self.loss()
         self.update_W()
         self.update_H()
-        return self.loss(iter)
+        return loss
+      
 
     def update_W(self):
         """
@@ -138,8 +102,9 @@ class TADWModel(tlx.nn.Module):
         # grad = self.lamda * self.W - 2 / np.prod(self.M.shape) * np.dot(H_T, self.M - np.dot(H_T.T, self.W))
         self.W = self.W - self.lr * grad
         # Overflow control
-        self.W[self.W < 10 ** (-15)] = 10 ** (-15)
+        self.W[self.W < lower_control] = lower_control
 
+        
     def update_H(self):
         """
         A single update of the feature basis matrix.
@@ -150,23 +115,22 @@ class TADWModel(tlx.nn.Module):
         # grad = self.lamda * self.H - 2 / np.prod(self.M.shape) * np.dot(np.dot(self.W, inside), self.T.T)
         self.H = self.H - self.lr * grad
         # Overflow control
-        self.H[self.H < 10 ** (-15)] = 10 ** (-15)
+        self.H[self.H < lower_control] = lower_control
 
-    def loss(self, iteration):
-
-        self.score_matrix = self.M - np.dot(np.dot(np.transpose(self.W), self.H), self.T)
-        main_loss = np.sum(np.square(self.score_matrix))  # when use summation
-        # regul_1 = self.lamda * np.sum(np.square(self.W))
-        # regul_2 = self.lamda * np.sum(np.square(self.H))
-
+  
+    def loss(self):
         # main_loss = np.mean(np.square(self.score_matrix))
-        # regul_1 = self.lamda * np.sum(np.square(self.W)) / 2
-        # regul_2 = self.lamda * np.sum(np.square(self.H)) / 2
-        # loss_sum = main_loss + regul_1 + regul_2
-        # self.losses.append([iteration, loss_sum, main_loss, regul_1, regul_2])
-        # print(iteration, main_loss, regul_1, regul_2)
+        # regul_1 = self.lamda * np.mean(np.square(self.W)) / 2
+        # regul_2 = self.lamda * np.mean(np.square(self.H)) / 2
+        
+        self.score_matrix = self.M - np.dot(np.dot(np.transpose(self.W), self.H), self.T)
+        main_loss = np.sum(np.square(self.score_matrix))
+        regul_1 = self.lamda * np.sum(np.square(self.W)) / 2
+        regul_2 = self.lamda * np.sum(np.square(self.H)) / 2
+        main_loss = main_loss + regul_1 + regul_2
         return main_loss
 
+      
     def campute(self):
         to_concat = [np.transpose(self.W), np.transpose(np.dot(self.H, self.T))]
         return np.concatenate(to_concat, axis=1)

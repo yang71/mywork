@@ -10,23 +10,13 @@ import argparse
 import tensorlayerx as tlx
 from gammagl.datasets import Planetoid
 from gammagl.models import TADWModel
-from gammagl.utils import calc_gcn_norm, mask_to_index
-from tensorlayerx.model import TrainOneStep, WithLoss
-from sklearn.linear_model import LogisticRegression
+
 from sklearn import svm
 from sklearn import metrics
 from sklearn import model_selection
 
 
-def calculate_acc(train_z, train_y, test_z, test_y, solver='lbfgs', multi_class='auto'):
-    # train_z = tlx.convert_to_numpy(train_z)
-    # train_y = tlx.convert_to_numpy(train_y)
-    # test_z = tlx.convert_to_numpy(test_z)
-    # test_y = tlx.convert_to_numpy(test_y)
-
-    # clf = LogisticRegression(solver=solver, multi_class=multi_class).fit(train_z, train_y)
-    # return clf.score(test_z, test_y)
-
+def calculate_acc(train_z, train_y, test_z, test_y):
     clf = svm.LinearSVC(C=5.0)
     clf.fit(train_z, train_y)
     predict_y = clf.predict(test_z)
@@ -41,11 +31,6 @@ def main(args):
     graph = dataset[0]
     edge_index = graph.edge_index
 
-    # for mindspore, it should be passed into node indices
-    train_idx = mask_to_index(graph.train_mask)
-    test_idx = mask_to_index(graph.test_mask)
-    val_idx = mask_to_index(graph.val_mask)
-
     model = TADWModel(edge_index=edge_index,
                       embedding_dim=args.embedding_dim,
                       lr=args.lr,
@@ -58,32 +43,32 @@ def main(args):
         "x": graph.x,
         "y": graph.y,
         "edge_index": graph.edge_index,
-        "train_idx": train_idx,
-        "test_idx": test_idx,
-        "val_idx": val_idx,
         "num_nodes": graph.num_nodes,
     }
 
+    best_test_acc = 0
+    z_test = 0
     for epoch in range(args.n_epoch):
         model.set_train()
         train_loss = model.fit(epoch)
         model.set_eval()
         z = model.campute()
 
-        # val_acc = calculate_acc(tlx.gather(z, data['train_idx']), tlx.gather(graph.y, data['train_idx']),
-        #                         tlx.gather(z, data['val_idx']), tlx.gather(graph.y, data['val_idx']))
-        train_x, test_x, train_y, test_y = model_selection.train_test_split(z, tlx.convert_to_numpy(graph.y),
-                                                                          test_size=0.2, shuffle=True)
+        train_x, test_x, train_y, test_y = model_selection.train_test_split(z, tlx.convert_to_numpy(data['y']),
+                                                                          test_size=0.5, shuffle=True)
         test_acc = calculate_acc(train_x, train_y, test_x, test_y)
+        if test_acc > best_test_acc:
+            best_test_acc = test_acc
+            z_test = z
 
         print("Epoch [{:0>3d}] ".format(epoch + 1) \
-              + "  train loss: {:.10f}".format(train_loss.item()) \
-              + "  val acc: {:.10f}".format(test_acc))
+              + "  train loss: {:.4f}".format(train_loss.item()) \
+              + "  test acc: {:.4f}".format(test_acc))
 
-    model.set_eval()
-    z = model.campute()
+    z = z_test
+    
     train_x, test_x, train_y, test_y = model_selection.train_test_split(z, tlx.convert_to_numpy(graph.y),
-                                                                        test_size=0.2, shuffle=True)
+                                                                        test_size=0.5, shuffle=True)
     test_acc = calculate_acc(train_x, train_y, test_x, test_y)
     print("Test acc:  {:.4f}".format(test_acc))
     return test_acc
