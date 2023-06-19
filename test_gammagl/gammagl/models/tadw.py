@@ -39,6 +39,8 @@ class TADWModel(tlx.nn.Module):
         self.W = np.random.uniform(0, 1, (self.embedding_dim, self.M.shape[0]))  # k*|V|
         self.H = np.random.uniform(0, 1, (self.embedding_dim, self.T.shape[0]))  # k*ft
 
+        self.losses = []
+
     def _create_target_matrix(self):
         edge_index, _ = add_self_loops(self.edge_index, num_nodes=self.N, n_loops=1)
         num_nodes = self.N
@@ -79,6 +81,7 @@ class TADWModel(tlx.nn.Module):
 
         return text_feature
 
+
     def fit(self):
         """
         Gradient descent updates for a given number of iterations.
@@ -87,11 +90,13 @@ class TADWModel(tlx.nn.Module):
         self.update_W()
         self.update_H()
         return loss
+      
 
     def update_W(self):
         """
         A single update of the node embedding matrix.
         """
+
         H_T = np.dot(self.H, self.T)  # k*|V|
         grad = self.lamda * self.W - np.dot(H_T, self.M - np.dot(np.transpose(H_T), self.W))
         # grad = self.lamda * self.W - 2 / np.prod(self.M.shape) * np.dot(H_T, self.M - np.dot(H_T.T, self.W))
@@ -99,10 +104,12 @@ class TADWModel(tlx.nn.Module):
         # Overflow control
         self.W[self.W < lower_control] = lower_control
 
+        
     def update_H(self):
         """
         A single update of the feature basis matrix.
         """
+
         inside = self.M - np.dot(np.dot(np.transpose(self.W), self.H), self.T)  # |V|*|V|
         grad = self.lamda * self.H - np.dot(np.dot(self.W, inside), np.transpose(self.T))  # K*ft
         # grad = self.lamda * self.H - 2 / np.prod(self.M.shape) * np.dot(np.dot(self.W, inside), self.T.T)
@@ -110,22 +117,20 @@ class TADWModel(tlx.nn.Module):
         # Overflow control
         self.H[self.H < lower_control] = lower_control
 
+  
     def loss(self):
-
-        # self.score_matrix = self.M - np.dot(np.dot(np.transpose(self.W), self.H), self.T)
-        # main_loss = np.sum(np.square(self.score_matrix))
-
-        self.score_matrix = self.M - np.dot(np.dot(np.transpose(self.W), self.H), self.T)
         # main_loss = np.mean(np.square(self.score_matrix))
         # regul_1 = self.lamda * np.mean(np.square(self.W)) / 2
         # regul_2 = self.lamda * np.mean(np.square(self.H)) / 2
+        
+        self.score_matrix = self.M - np.dot(np.dot(np.transpose(self.W), self.H), self.T)
         main_loss = np.sum(np.square(self.score_matrix))
         regul_1 = self.lamda * np.sum(np.square(self.W)) / 2
         regul_2 = self.lamda * np.sum(np.square(self.H)) / 2
         main_loss = main_loss + regul_1 + regul_2
-
         return main_loss
 
+      
     def campute(self):
         to_concat = [np.transpose(self.W), np.transpose(np.dot(self.H, self.T))]
         return np.concatenate(to_concat, axis=1)
