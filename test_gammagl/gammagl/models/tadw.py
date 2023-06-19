@@ -1,5 +1,4 @@
 import tensorlayerx as tlx
-from collections import defaultdict
 import numpy as np
 from ..utils.num_nodes import maybe_num_nodes
 from gammagl.utils import add_self_loops
@@ -81,7 +80,6 @@ class TADWModel(tlx.nn.Module):
 
         return text_feature
 
-
     def fit(self):
         """
         Gradient descent updates for a given number of iterations.
@@ -90,7 +88,6 @@ class TADWModel(tlx.nn.Module):
         self.update_W()
         self.update_H()
         return loss
-      
 
     def update_W(self):
         """
@@ -104,7 +101,6 @@ class TADWModel(tlx.nn.Module):
         # Overflow control
         self.W[self.W < lower_control] = lower_control
 
-        
     def update_H(self):
         """
         A single update of the feature basis matrix.
@@ -117,12 +113,11 @@ class TADWModel(tlx.nn.Module):
         # Overflow control
         self.H[self.H < lower_control] = lower_control
 
-  
     def loss(self):
         # main_loss = np.mean(np.square(self.score_matrix))
         # regul_1 = self.lamda * np.mean(np.square(self.W)) / 2
         # regul_2 = self.lamda * np.mean(np.square(self.H)) / 2
-        
+
         self.score_matrix = self.M - np.dot(np.dot(np.transpose(self.W), self.H), self.T)
         main_loss = np.sum(np.square(self.score_matrix))
         regul_1 = self.lamda * np.sum(np.square(self.W)) / 2
@@ -130,7 +125,6 @@ class TADWModel(tlx.nn.Module):
         main_loss = main_loss + regul_1 + regul_2
         return main_loss
 
-      
     def campute(self):
         to_concat = [np.transpose(self.W), np.transpose(np.dot(self.H, self.T))]
         return np.concatenate(to_concat, axis=1)
