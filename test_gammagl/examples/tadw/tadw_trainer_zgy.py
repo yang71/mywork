@@ -80,7 +80,8 @@ def main(args):
 if __name__ == '__main__':
     # parameters setting
     parser = argparse.ArgumentParser()
-    parser.add_argument('--dataset', type=str, default='cora', help='dataset')
+    # parser.add_argument('--dataset', type=str, default='cora', help='dataset')
+    parser.add_argument('--dataset', type=str, default='citeseer', help='dataset')
     parser.add_argument("--dataset_path", type=str, default=r'../', help="path to save dataset")
     parser.add_argument("--best_model_path", type=str, default=r'./', help="path to save best model")
     parser.add_argument("--lr", type=float, default=0.3, help="learning rate")  # 0.3
@@ -93,10 +94,14 @@ if __name__ == '__main__':
 
     main(args)
 
-    # test_acc = [0.7925, 0.8006, 0.8102, 0.8109, 0.8013]  # ms
-    # test_acc = [0.7866, ]
+    # test_acc = [0.7925, 0.8006, 0.8102, 0.8109, 0.8013]  # mindspore
+    # test_acc = [0.8227, 0.8028, 0.8058, 0.8242, 0.7999]  # tensorflow
+    # test_acc = [0.8006, 0.7829, 0.8072, 0.8198, 0.7777]  # torch
+    # test_acc = [0.7954, 0.8013, 0.7939, 0.7843, 0.7767]  # paddle
+
+    # test_acc = []
     # import numpy as np
-    #
+
     # for i in range(5):
     #     test_acc.append(main(args))
     # acc_mean = np.mean(test_acc)
