@@ -80,7 +80,8 @@ __all__ = [
     'ieHGCNModel',
     'MGNNI',
     'MGNNI_m_att',
-    ''
+    'TADWModel',
+
 ]
 
 classes = __all__
