@@ -10,10 +10,15 @@ import argparse
 import tensorlayerx as tlx
 from gammagl.datasets import Planetoid
 from gammagl.models import TADWModel
-
 from sklearn import svm
 from sklearn import metrics
 from sklearn import model_selection
+
+if tlx.BACKEND == 'torch':  # when the backend is torch and you want to use GPU
+    try:
+        tlx.set_device(device='GPU', id=6)
+    except:
+        print("GPU is not available")
 
 
 def calculate_acc(train_z, train_y, test_z, test_y):
@@ -66,7 +71,6 @@ def main(args):
               + "  test acc: {:.4f}".format(test_acc))
 
     z = z_test
-    
     train_x, test_x, train_y, test_y = model_selection.train_test_split(z, tlx.convert_to_numpy(graph.y),
                                                                         test_size=0.5, shuffle=True)
     test_acc = calculate_acc(train_x, train_y, test_x, test_y)
@@ -77,11 +81,11 @@ def main(args):
 if __name__ == '__main__':
     # parameters setting
     parser = argparse.ArgumentParser()
-    parser.add_argument('--dataset', type=str, default='cora', help='dataset')
+    parser.add_argument('--dataset', type=str, default='citeseer', help='dataset')
     parser.add_argument("--dataset_path", type=str, default=r'../', help="path to save dataset")
     parser.add_argument("--best_model_path", type=str, default=r'./', help="path to save best model")
-    parser.add_argument("--lr", type=float, default=0.3, help="learning rate")  # 0.3
-    parser.add_argument("--n_epoch", type=int, default=100, help="number of epoch")  # 100
+    parser.add_argument("--lr", type=float, default=0.1, help="learning rate")  # 0.3
+    parser.add_argument("--n_epoch", type=int, default=50, help="number of epoch")  # 100
     parser.add_argument("--embedding_dim", type=int, default=500)  # 80 100 200 300 400
     parser.add_argument("--lamda", type=float, default=0.5)  # 0.5
     parser.add_argument("--svdft", type=int, default=300)  # 300
