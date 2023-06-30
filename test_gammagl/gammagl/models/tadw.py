@@ -9,6 +9,31 @@ lower_control = 10 ** (-15)
 
 
 class TADWModel(tlx.nn.Module):
+    r"""The TADW model from the
+    `"Network Representation Learning with Rich Text Information"
+    <https://www.ijcai.org/Proceedings/15/Papers/299.pdf>`_ paper
+    where random walks of length :obj:`walk_length` are sampled in
+    a given graph, and node embeddings are learned via negative
+    sampling optimization.
+
+    Parameters
+    ----------
+        edge_index: Iterable
+            The edge indices.
+        embedding_dim: int
+            The size of each embedding vector.
+        lr: float
+            The learning rate.
+        lamda: float
+            A harmonic factor to balance two components.
+        svdft: int
+            The size of each text feature vector.
+        node_feature: Iterable
+            The matrix of Node feature.
+        name: str
+            model name
+    """
+
     def __init__(
             self,
             edge_index,
@@ -35,10 +60,8 @@ class TADWModel(tlx.nn.Module):
         self.T = self._create_tfifd_matrix()
         self.T = np.transpose(self.T)
 
-        self.W = np.random.uniform(0, 1, (self.embedding_dim, self.M.shape[0]))  # k*|V|
-        self.H = np.random.uniform(0, 1, (self.embedding_dim, self.T.shape[0]))  # k*ft
-
-        self.losses = []
+        self.W = np.random.uniform(0, 1, (self.embedding_dim, self.M.shape[0]))
+        self.H = np.random.uniform(0, 1, (self.embedding_dim, self.T.shape[0]))
 
     def _create_target_matrix(self):
         edge_index, _ = add_self_loops(self.edge_index, num_nodes=self.N, n_loops=1)
@@ -82,7 +105,7 @@ class TADWModel(tlx.nn.Module):
 
     def fit(self):
         """
-        Gradient descent updates for a given number of iterations.
+        Gradient descent updates.
         """
         loss = self.loss()
         self.update_W()
@@ -93,7 +116,6 @@ class TADWModel(tlx.nn.Module):
         """
         A single update of the node embedding matrix.
         """
-
         H_T = np.dot(self.H, self.T)  # k*|V|
         grad = self.lamda * self.W - np.dot(H_T, self.M - np.dot(np.transpose(H_T), self.W))
         # grad = self.lamda * self.W - 2 / np.prod(self.M.shape) * np.dot(H_T, self.M - np.dot(H_T.T, self.W))
@@ -105,7 +127,6 @@ class TADWModel(tlx.nn.Module):
         """
         A single update of the feature basis matrix.
         """
-
         inside = self.M - np.dot(np.dot(np.transpose(self.W), self.H), self.T)  # |V|*|V|
         grad = self.lamda * self.H - np.dot(np.dot(self.W, inside), np.transpose(self.T))  # K*ft
         # grad = self.lamda * self.H - 2 / np.prod(self.M.shape) * np.dot(np.dot(self.W, inside), self.T.T)
@@ -114,15 +135,18 @@ class TADWModel(tlx.nn.Module):
         self.H[self.H < lower_control] = lower_control
 
     def loss(self):
+        # self.score_matrix = self.M - np.dot(np.dot(np.transpose(self.W), self.H), self.T)
+        # main_loss = np.sum(np.square(self.score_matrix))
+
+        self.score_matrix = self.M - np.dot(np.dot(np.transpose(self.W), self.H), self.T)
         # main_loss = np.mean(np.square(self.score_matrix))
         # regul_1 = self.lamda * np.mean(np.square(self.W)) / 2
         # regul_2 = self.lamda * np.mean(np.square(self.H)) / 2
-
-        self.score_matrix = self.M - np.dot(np.dot(np.transpose(self.W), self.H), self.T)
         main_loss = np.sum(np.square(self.score_matrix))
         regul_1 = self.lamda * np.sum(np.square(self.W)) / 2
         regul_2 = self.lamda * np.sum(np.square(self.H)) / 2
         main_loss = main_loss + regul_1 + regul_2
+
         return main_loss
 
     def campute(self):

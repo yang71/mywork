@@ -13,10 +13,15 @@ import argparse
 import tensorlayerx as tlx
 from gammagl.datasets import Planetoid
 from gammagl.models import TADWModel
-
 from sklearn import svm
 from sklearn import metrics
 from sklearn import model_selection
+
+if tlx.BACKEND == 'torch':  # when the backend is torch and you want to use GPU
+    try:
+        tlx.set_device(device='GPU', id=6)
+    except:
+        print("GPU is not available")
 
 
 def calculate_acc(train_z, train_y, test_z, test_y):
@@ -69,7 +74,6 @@ def main(args):
               + "  test acc: {:.4f}".format(test_acc))
 
     z = z_test
-
     train_x, test_x, train_y, test_y = model_selection.train_test_split(z, tlx.convert_to_numpy(graph.y),
                                                                         test_size=0.5, shuffle=True)
     test_acc = calculate_acc(train_x, train_y, test_x, test_y)
@@ -80,32 +84,15 @@ def main(args):
 if __name__ == '__main__':
     # parameters setting
     parser = argparse.ArgumentParser()
-    # parser.add_argument('--dataset', type=str, default='cora', help='dataset')
     parser.add_argument('--dataset', type=str, default='citeseer', help='dataset')
     parser.add_argument("--dataset_path", type=str, default=r'../', help="path to save dataset")
     parser.add_argument("--best_model_path", type=str, default=r'./', help="path to save best model")
-    parser.add_argument("--lr", type=float, default=0.3, help="learning rate")  # 0.3
-    parser.add_argument("--n_epoch", type=int, default=50, help="number of epoch")  # 50 100
-    parser.add_argument("--embedding_dim", type=int, default=500)  # 80 100 200 300 400 500
-    parser.add_argument("--lamda", type=float, default=0.5)  # 0.5
-    parser.add_argument("--svdft", type=int, default=300)  # 200 300
+    parser.add_argument("--lr", type=float, default=0.1, help="learning rate")
+    parser.add_argument("--n_epoch", type=int, default=50, help="number of epoch")
+    parser.add_argument("--embedding_dim", type=int, default=500)
+    parser.add_argument("--lamda", type=float, default=0.5)
+    parser.add_argument("--svdft", type=int, default=300)
 
     args = parser.parse_args()
 
     main(args)
-
-    # test_acc = [0.7925, 0.8006, 0.8102, 0.8109, 0.8013]  # mindspore
-    # test_acc = [0.8227, 0.8028, 0.8058, 0.8242, 0.7999]  # tensorflow
-    # test_acc = [0.8006, 0.7829, 0.8072, 0.8198, 0.7777]  # torch
-    # test_acc = [0.7954, 0.8013, 0.7939, 0.7843, 0.7767]  # paddle
-
-    # test_acc = []
-    # import numpy as np
-
-    # for i in range(5):
-    #     test_acc.append(main(args))
-    # acc_mean = np.mean(test_acc)
-    # acc_std = np.std(test_acc)
-    # print("test_acc: ")
-    # print(test_acc)
-    # print("acc_mean: ", acc_mean, "acc_std: ", acc_std)
