@@ -1,0 +1,12 @@
+Namespace(epochs=300, lr=0.5, l2_coef=5e-06, dataset='wisconsin', dataset_path='../', self_loops=1, best_model_path='./', model='MGNNI_m_att', gamma=0.8, max_iter=300, threshold=1e-06, ks='[1,2]', batch_norm=0, path='./results/', idx_split=5)
+Epoch [001]   train loss: 1.6094  val acc: 0.7000  test acc: 0.7059
+Epoch [002]   train loss: 1.2468  val acc: 0.7000  test acc: 0.7059
+Epoch [003]   train loss: 0.9746  val acc: 0.7000  test acc: 0.7059
+Epoch [004]   train loss: 0.8021  val acc: 0.7375  test acc: 0.7451
+Epoch [005]   train loss: 0.6667  val acc: 0.7375  test acc: 0.7255
+Epoch [006]   train loss: 0.5875  val acc: 0.7375  test acc: 0.7647
+Epoch [007]   train loss: 0.5072  val acc: 0.7625  test acc: 0.7843
+Epoch [008]   train loss: 0.4388  val acc: 0.8000  test acc: 0.8039
+Epoch [009]   train loss: 0.3773  val acc: 0.8000  test acc: 0.8039
+Epoch [010]   train loss: 0.3348  val acc: 0.8000  test acc: 0.8039
+Epoch [011]   train loss: 0.2888  val acc: 0.7875  test acc: 0.8039

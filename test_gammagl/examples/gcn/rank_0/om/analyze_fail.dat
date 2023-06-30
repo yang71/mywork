@@ -1,0 +1,105 @@
+# 1.This file shows the parsed IR info when graph evaluating failed to help find the problem.
+# 2.You can search the last `------------------------>` to the node which is inferred failed.
+# 3.Refer to https://www.mindspore.cn/search?inputValue=analyze_fail.dat to get more instructions.
+# ===============================================================================
+
+# [No.1] Pow.26
+# In file /Users/yangjinyu/miniforge3/envs/tf/lib/python3.9/site-packages/mindspore/ops/_grad/grad_math_ops.py(699)/    def bprop(x, power, out, dout):/
+funcgraph fg_26(
+        %para1 : Tensor(F32)[-1]    # x
+        , %para2 : Tensor(F32)[]    # power
+        , %para3 : Tensor(F32)[-1]    # out
+        , %para4 : Tensor(F32)[-1]    # dout
+    ) {
+    %1 : Tensor(Bool)[-1] = DoSignaturePrimitive::S-Prim-less{prim_type=1}(%para1, I64(0))    #(Tensor(F32)[-1], I64) #scope: Gradients/Default/gradPow
+      # In file /Users/yangjinyu/miniforge3/envs/tf/lib/python3.9/site-packages/mindspore/ops/_grad/grad_math_ops.py(701)/        x = F.select(x < 0, F.fill(F.dtype(x), F.shape(x), 1), x)/#[CNode]28
+    %2 : Bool = DoSignaturePrimitive::S-Prim-isinstance{prim_type=1}(%1, ClassType)    #(Tensor(Bool)[-1], TypeType) #scope: Gradients/Default/gradPow
+      # In file /Users/yangjinyu/miniforge3/envs/tf/lib/python3.9/site-packages/mindspore/ops/function/array_func.py(1030)/    is_cond_tensor = isinstance(cond, Tensor)/#is_cond_tensor
+    %3 : TypeType = DoSignaturePrimitive::S-Prim-DType{prim_type=1}(%para1)    #(Tensor(F32)[-1]) #scope: Gradients/Default/gradPow
+      # In file /Users/yangjinyu/miniforge3/envs/tf/lib/python3.9/site-packages/mindspore/ops/_grad/grad_math_ops.py(701)/        x = F.select(x < 0, F.fill(F.dtype(x), F.shape(x), 1), x)/#[CNode]29
+    %4 : Tuple[I64] = DoSignaturePrimitive::S-Prim-Shape{prim_type=1}(%para1)    #(Tensor(F32)[-1]) #scope: Gradients/Default/gradPow
+      # In file /Users/yangjinyu/miniforge3/envs/tf/lib/python3.9/site-packages/mindspore/ops/function/array_func.py(768)/    return shape_(input_x)/#[CNode]30
+    %5 : Tensor(I64)[-1] = DoSignaturePrimitive::S-Prim-Fill{prim_type=1}(%3, %4, I64(1))    #(TypeType, Tuple[I64], I64) #scope: Gradients/Default/gradPow
+      # In file /Users/yangjinyu/miniforge3/envs/tf/lib/python3.9/site-packages/mindspore/ops/function/array_func.py(304)/    return fill_(type, shape, value)/#[CNode]31
+    %6 : Tuple[TypeType*2] = DoSignaturePrimitive::S-Prim-MakeTuple{prim_type=1}(ClassType, ClassType)    #(TypeType, TypeType) #scope: Gradients/Default/gradPow
+      # In file /Users/yangjinyu/miniforge3/envs/tf/lib/python3.9/site-packages/mindspore/ops/function/array_func.py(1026)/    is_x_scalar = isinstance(x, (int, float))/#[CNode]32
+    %7 : Bool = DoSignaturePrimitive::S-Prim-isinstance{prim_type=1}(%5, %6)    #(Tensor(I64)[-1], Tuple[TypeType*2]) #scope: Gradients/Default/gradPow
+      # In file /Users/yangjinyu/miniforge3/envs/tf/lib/python3.9/site-packages/mindspore/ops/function/array_func.py(1026)/    is_x_scalar = isinstance(x, (int, float))/#is_x_scalar
+    %8 : Tuple[TypeType*2] = DoSignaturePrimitive::S-Prim-MakeTuple{prim_type=1}(ClassType, ClassType)    #(TypeType, TypeType) #scope: Gradients/Default/gradPow
+      # In file /Users/yangjinyu/miniforge3/envs/tf/lib/python3.9/site-packages/mindspore/ops/function/array_func.py(1027)/    is_y_scalar = isinstance(y, (int, float))/#[CNode]33
+    %9 : Bool = DoSignaturePrimitive::S-Prim-isinstance{prim_type=1}(%para1, %8)    #(Tensor(F32)[-1], Tuple[TypeType*2]) #scope: Gradients/Default/gradPow
+      # In file /Users/yangjinyu/miniforge3/envs/tf/lib/python3.9/site-packages/mindspore/ops/function/array_func.py(1043)/    if is_y_scalar:/#Φis_y_scalar
+    %10 : Bool = DoSignaturePrimitive::S-Prim-isinstance{prim_type=1}(%5, ClassType)    #(Tensor(I64)[-1], TypeType) #scope: Gradients/Default/gradPow
+      # In file /Users/yangjinyu/miniforge3/envs/tf/lib/python3.9/site-packages/mindspore/ops/function/array_func.py(1028)/    is_x_tensor = isinstance(x, Tensor)/#is_x_tensor
+    %11 : Bool = DoSignaturePrimitive::S-Prim-isinstance{prim_type=1}(%para1, ClassType)    #(Tensor(F32)[-1], TypeType) #scope: Gradients/Default/gradPow
+      # In file /Users/yangjinyu/miniforge3/envs/tf/lib/python3.9/site-packages/mindspore/ops/function/array_func.py(1029)/    is_y_tensor = isinstance(y, Tensor)/#is_y_tensor
+    %12 : NoneType = DoSignaturePrimitive::S-Prim-_check_select_type{prim_type=1}(%2, %7, %9, %10, %11)    #(Bool, Bool, Bool, Bool, Bool) #scope: Gradients/Default/gradPow
+      # In file /Users/yangjinyu/miniforge3/envs/tf/lib/python3.9/site-packages/mindspore/ops/function/array_func.py(1031)/    _check_select_type(is_cond_tensor, is_x_scalar, is_y_scalar, is_x_tensor, is_y_tensor)/#[CNode]34
+    %13 : NoneType = Primitive::stop_gradient{prim_type=1}(%12)    #(NoneType) #scope: Gradients/Default/gradPow
+      # In file /Users/yangjinyu/miniforge3/envs/tf/lib/python3.9/site-packages/mindspore/ops/_grad/grad_math_ops.py(701)/        x = F.select(x < 0, F.fill(F.dtype(x), F.shape(x), 1), x)/#[CNode]35
+    %14 : Func = Primitive::getattr{prim_type=1}(%7, "__bool__")    #(Bool, String) #scope: Gradients/Default/gradPow
+      # In file /Users/yangjinyu/miniforge3/envs/tf/lib/python3.9/site-packages/mindspore/_extends/parse/standard_method.py(1774)/    return x.__bool__()/#[CNode]36
+    %15 : Bool = %14() #scope: Gradients/Default/gradPow
+      # In file /Users/yangjinyu/miniforge3/envs/tf/lib/python3.9/site-packages/mindspore/_extends/parse/standard_method.py(1774)/    return x.__bool__()/#[CNode]37
+    %16 : Func = Primitive::Switch{prim_type=1}(%15, FuncGraph::fg_38, FuncGraph::fg_39)    #(Bool, Func, Func)    # fg_38=✓select.38, fg_39=✗select.39 #scope: Gradients/Default/gradPow
+      # In file /Users/yangjinyu/miniforge3/envs/tf/lib/python3.9/site-packages/mindspore/ops/function/array_func.py(1034)/    if is_x_scalar:/#[CNode]40
+    %17 : Tensor(I64)[-1] = %16() #scope: Gradients/Default/gradPow
+      # In file /Users/yangjinyu/miniforge3/envs/tf/lib/python3.9/site-packages/mindspore/ops/function/array_func.py(1034)/    if is_x_scalar:/#[CNode]41
+    %18 : Func = Primitive::getattr{prim_type=1}(%9, "__bool__")    #(Bool, String) #scope: Gradients/Default/gradPow
+      # In file /Users/yangjinyu/miniforge3/envs/tf/lib/python3.9/site-packages/mindspore/_extends/parse/standard_method.py(1774)/    return x.__bool__()/#[CNode]36
+    %19 : Bool = %18() #scope: Gradients/Default/gradPow
+      # In file /Users/yangjinyu/miniforge3/envs/tf/lib/python3.9/site-packages/mindspore/_extends/parse/standard_method.py(1774)/    return x.__bool__()/#[CNode]37
+    %20 : Func = Primitive::Switch{prim_type=1}(%19, FuncGraph::fg_42, FuncGraph::fg_43)    #(Bool, Func, Func)    # fg_42=✓↓select.42, fg_43=✗↓select.43 #scope: Gradients/Default/gradPow
+      # In file /Users/yangjinyu/miniforge3/envs/tf/lib/python3.9/site-packages/mindspore/ops/function/array_func.py(1043)/    if is_y_scalar:/#[CNode]44
+    %21 : Tensor(F32)[-1] = %20() #scope: Gradients/Default/gradPow
+      # In file /Users/yangjinyu/miniforge3/envs/tf/lib/python3.9/site-packages/mindspore/ops/function/array_func.py(1043)/    if is_y_scalar:/#[CNode]45
+
+#------------------------> 0
+    %22 = DoSignaturePrimitive::S-Prim-Select{prim_type=1}[output_names=["output"], input_names=["condition", "x", "y"]](%1, %17, %21)    #(Tensor(Bool)[-1], Tensor(I64)[-1], Tensor(F32)[-1]) #scope: Gradients/Default/gradPow
+      # In file /Users/yangjinyu/miniforge3/envs/tf/lib/python3.9/site-packages/mindspore/ops/function/array_func.py(1051)/    return tensor_select_(cond, input_x, input_y)/#[CNode]46
+    %23 = Primitive::Depend{prim_type=1}[side_effect_propagate=I64(1)](%22, %13)    #(Undefined, NoneType) #scope: Gradients/Default/gradPow
+      # In file /Users/yangjinyu/miniforge3/envs/tf/lib/python3.9/site-packages/mindspore/ops/_grad/grad_math_ops.py(701)/        x = F.select(x < 0, F.fill(F.dtype(x), F.shape(x), 1), x)/#[CNode]47
+    %24 = DoSignaturePrimitive::S-Prim-Shape{prim_type=1}(%23)    #(Undefined) #scope: Gradients/Default/gradPow
+      # In file /Users/yangjinyu/miniforge3/envs/tf/lib/python3.9/site-packages/mindspore/ops/_grad/grad_math_ops.py(107)/            reduce_dx = reshape(dx, shape_of_x)/#Φshape_of_x
+    %25 = DoSignaturePrimitive::S-Prim-is_shape_unknown{prim_type=1}(%24)    #(Undefined) #scope: Gradients/Default/gradPow
+      # In file /Users/yangjinyu/miniforge3/envs/tf/lib/python3.9/site-packages/mindspore/ops/_grad/grad_math_ops.py(101)/    if not (is_shape_unknown(shape_of_x) or is_shape_unknown(shape_of_y)):/#[CNode]48
+    %26 = Primitive::getattr{prim_type=1}(%25, "__bool__")    #(Undefined, String) #scope: Gradients/Default/gradPow
+      # In file /Users/yangjinyu/miniforge3/envs/tf/lib/python3.9/site-packages/mindspore/_extends/parse/standard_method.py(1774)/    return x.__bool__()/#[CNode]36
+    %27 = %26() #scope: Gradients/Default/gradPow
+      # In file /Users/yangjinyu/miniforge3/envs/tf/lib/python3.9/site-packages/mindspore/_extends/parse/standard_method.py(1774)/    return x.__bool__()/#[CNode]37
+    %28 = Primitive::Switch{prim_type=1}(%27, FuncGraph::fg_49, FuncGraph::fg_50)    #(Undefined, Undefined, Undefined)    # fg_49=↰binop_grad_common.49, fg_50=↱binop_grad_common.50 #scope: Gradients/Default/gradPow
+      # In file /Users/yangjinyu/miniforge3/envs/tf/lib/python3.9/site-packages/mindspore/ops/_grad/grad_math_ops.py(101)/    if not (is_shape_unknown(shape_of_x) or is_shape_unknown(shape_of_y)):/#[CNode]51
+    %29 = %28() #scope: Gradients/Default/gradPow
+      # In file /Users/yangjinyu/miniforge3/envs/tf/lib/python3.9/site-packages/mindspore/ops/_grad/grad_math_ops.py(101)/    if not (is_shape_unknown(shape_of_x) or is_shape_unknown(shape_of_y)):/#[CNode]52
+    %30 = DoSignaturePrimitive::S-Prim-logical_not{prim_type=1}(%29)    #(Undefined) #scope: Gradients/Default/gradPow
+      # In file /Users/yangjinyu/miniforge3/envs/tf/lib/python3.9/site-packages/mindspore/ops/_grad/grad_math_ops.py(101)/    if not (is_shape_unknown(shape_of_x) or is_shape_unknown(shape_of_y)):/#[CNode]53
+    %31 = Primitive::getattr{prim_type=1}(%30, "__bool__")    #(Undefined, String) #scope: Gradients/Default/gradPow
+      # In file /Users/yangjinyu/miniforge3/envs/tf/lib/python3.9/site-packages/mindspore/_extends/parse/standard_method.py(1774)/    return x.__bool__()/#[CNode]36
+    %32 = %31() #scope: Gradients/Default/gradPow
+      # In file /Users/yangjinyu/miniforge3/envs/tf/lib/python3.9/site-packages/mindspore/_extends/parse/standard_method.py(1774)/    return x.__bool__()/#[CNode]37
+    %33 = Primitive::Switch{prim_type=1}(%32, FuncGraph::fg_54, FuncGraph::fg_55)    #(Undefined, Undefined, Undefined)    # fg_54=✓binop_grad_common.54, fg_55=✗binop_grad_common.55 #scope: Gradients/Default/gradPow
+      # In file /Users/yangjinyu/miniforge3/envs/tf/lib/python3.9/site-packages/mindspore/ops/_grad/grad_math_ops.py(101)/    if not (is_shape_unknown(shape_of_x) or is_shape_unknown(shape_of_y)):/#[CNode]56
+    %34 = %33() #scope: Gradients/Default/gradPow
+      # In file /Users/yangjinyu/miniforge3/envs/tf/lib/python3.9/site-packages/mindspore/ops/_grad/grad_math_ops.py(101)/    if not (is_shape_unknown(shape_of_x) or is_shape_unknown(shape_of_y)):/#[CNode]57
+    Primitive::Return{prim_type=1}(%34)    #(Undefined) #scope: Gradients/Default/gradPow
+      # In file /Users/yangjinyu/miniforge3/envs/tf/lib/python3.9/site-packages/mindspore/ops/_grad/grad_math_ops.py(703)/        return binop_grad_common(x, power, bc_dx, bc_dpower)/#[CNode]58
+}
+# order:
+#   1: Pow.59:[CNode]60{[0]: ValueNode<Primitive> resolve, [1]: ValueNode<NameSpace> CommonOPS: 'Namespace:mindspore._extends.parse.trope', [2]: ValueNode<Symbol> MakeTuple}
+#   2: Pow.59:[CNode]61{[0]: [CNode]60, [1]: x, [2]: [CNode]62}
+#   3: Pow.59:[CNode]63{[0]: ValueNode<Primitive> resolve, [1]: ValueNode<NameSpace> CommonOPS: 'Namespace:mindspore._extends.parse.trope', [2]: ValueNode<Symbol> MakeTuple}
+#   4: Pow.59:[CNode]64{[0]: [CNode]63, [1]: x}
+#   5: Pow.59:[CNode]65{[0]: ValueNode<Primitive> resolve, [1]: ValueNode<NameSpace> CommonOPS: 'Namespace:mindspore._extends.parse.trope', [2]: ValueNode<Symbol> MakeTuple}
+#   6: Pow.59:[CNode]66{[0]: [CNode]65, [1]: x}
+#   7: Pow.59:[CNode]67{[0]: ValueNode<Primitive> resolve, [1]: ValueNode<NameSpace> CommonOPS: 'Namespace:mindspore._extends.parse.trope', [2]: ValueNode<Symbol> MakeTuple}
+#   8: Pow.59:[CNode]68{[0]: [CNode]67, [1]: [CNode]29, [2]: [CNode]69, [3]: ValueNode<Int64Imm> 1}
+#   9: Pow.59:[CNode]70{[0]: ValueNode<Primitive> resolve, [1]: ValueNode<NameSpace> CommonOPS: 'Namespace:mindspore._extends.parse.trope', [2]: ValueNode<Symbol> MakeTuple}
+#  10: Pow.59:[CNode]71{[0]: [CNode]70, [1]: [CNode]28, [2]: [CNode]72, [3]: x}
+#  11: Pow.59:[CNode]73{[0]: ValueNode<Primitive> resolve, [1]: ValueNode<NameSpace> CommonOPS: 'Namespace:mindspore._extends.parse.trope', [2]: ValueNode<Symbol> MakeTuple}
+#  12: Pow.59:[CNode]74{[0]: [CNode]73, [1]: x}
+#  13: Pow.59:[CNode]75{[0]: ValueNode<Primitive> resolve, [1]: ValueNode<NameSpace> CommonOPS: 'Namespace:mindspore._extends.parse.trope', [2]: ValueNode<Symbol> MakeTuple}
+#  14: Pow.59:[CNode]76{[0]: [CNode]75, [1]: x, [2]: power, [3]: bc_dx, [4]: bc_dpower}
+
+
+#===============================================================================
+# num of function graphs in stack: 1/2 (Ignored 1 internal frames).

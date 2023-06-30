@@ -1,0 +1,9 @@
+Namespace(epochs=300, lr=0.5, l2_coef=5e-06, dataset='cornell', dataset_path='../', self_loops=1, best_model_path='./', model='MGNNI_m_att', gamma=0.8, max_iter=300, threshold=1e-06, ks='[1,2]', batch_norm=0, path='./results/', idx_split=5)
+Epoch [001]   train loss: 1.6093  val acc: 0.4068  test acc: 0.4865
+Epoch [002]   train loss: 1.2802  val acc: 0.4068  test acc: 0.4865
+Epoch [003]   train loss: 1.0227  val acc: 0.4068  test acc: 0.4865
+Epoch [004]   train loss: 0.8358  val acc: 0.4237  test acc: 0.5135
+Epoch [005]   train loss: 0.7356  val acc: 0.4407  test acc: 0.5135
+Epoch [006]   train loss: 0.6143  val acc: 0.4915  test acc: 0.5946
+Epoch [007]   train loss: 0.5373  val acc: 0.5254  test acc: 0.5676
+Epoch [008]   train loss: 0.4450  val acc: 0.5424  test acc: 0.5676

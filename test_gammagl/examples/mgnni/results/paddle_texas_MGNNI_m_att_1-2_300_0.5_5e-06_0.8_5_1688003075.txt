@@ -1,0 +1,5 @@
+Namespace(epochs=300, lr=0.5, l2_coef=5e-06, dataset='texas', dataset_path='../', self_loops=1, best_model_path='./', model='MGNNI_m_att', gamma=0.8, max_iter=300, threshold=1e-06, ks='[1,2]', batch_norm=0, path='./results/', idx_split=5)
+Epoch [001]   train loss: 1.6093  val acc: 0.5932  test acc: 0.5676
+Epoch [002]   train loss: 1.2691  val acc: 0.5932  test acc: 0.5676
+Epoch [003]   train loss: 1.0034  val acc: 0.5932  test acc: 0.5676
+Epoch [004]   train loss: 0.8325  val acc: 0.5932  test acc: 0.5676
